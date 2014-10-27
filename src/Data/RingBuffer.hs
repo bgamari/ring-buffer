@@ -25,20 +25,20 @@ data RingBuffer v a
 data RingState = RingState { ringFull :: !Bool, ringHead :: !Int }
 
 -- | We use the @Mutable@ vector type to ensure injectiveness
-type RingM vm a = StateT RingState (ReaderT (vm (PrimState IO) a) IO)
+type RingM m vm a = StateT RingState (ReaderT (vm (PrimState IO) a) m)
 
 -- | Atomically perform an action with the ring
-withRing :: VG.Vector v a
+withRing :: (VG.Vector v a, MonadIO m)
          => RingBuffer v a
-         -> RingM (VG.Mutable v) a r
-         -> IO r
+         -> RingM m (VG.Mutable v) a r
+         -> m r
 withRing rb action = do
-    s <- takeMVar (ringState rb)
+    s <- liftIO $ takeMVar (ringState rb)
     (r, s') <- runReaderT (runStateT action s) (ringBuffer rb)
-    putMVar (ringState rb) s'
+    liftIO $ putMVar (ringState rb) s'
     return r
 
-advance :: (VGM.MVector v a) => Int -> RingM v a ()
+advance :: (VGM.MVector v a, MonadIO m) => Int -> RingM m v a ()
 advance n = do
     RingState full pos <- get
     cap <- capacity'
@@ -89,11 +89,11 @@ capacity :: (VG.Vector v a) => RingBuffer v a -> Int
 capacity rb = VGM.length (ringBuffer rb)
 
 -- | The maximum number of items the ring can contain
-capacity' :: (VGM.MVector v a) => RingM v a Int
+capacity' :: (VGM.MVector v a, MonadIO m) => RingM m v a Int
 capacity' = asks VGM.length
 
 -- | The current filled length of the ring
-length' :: (VGM.MVector v a) => RingM v a Int
+length' :: (VGM.MVector v a, MonadIO m) => RingM m v a Int
 length' = do
     RingState full pos <- get
     if full
@@ -108,8 +108,8 @@ length rb = withRing rb length'
 -- Note that no references to the vector may leak out of the action as
 -- it will later be mutated. Moreover, the items in the vector are in
 -- no particular order.
-withItems :: VG.Vector v a => RingBuffer v a -> (v a -> IO b) -> IO b
+withItems :: (MonadIO m, VG.Vector v a) => RingBuffer v a -> (v a -> m b) -> m b
 withItems rb action = withRing rb $ do
     frozen <- liftIO $ VG.unsafeFreeze (ringBuffer rb)
     n <- length'
-    liftIO $ action (VG.take n frozen)
+    lift $ lift $ action (VG.take n frozen)
