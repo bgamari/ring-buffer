@@ -1,3 +1,6 @@
+-- | This is a thread-safe implementation of a mutable ring-buffer
+-- built upon @vector@.
+
 module Data.RingBuffer ( RingBuffer
                        , new
                        , clear
@@ -16,7 +19,7 @@ import Control.Monad.State
 import Control.Monad.Reader
 import Control.Monad.Primitive
 
--- | A concurrent ring buffer
+-- | A concurrent ring buffer.
 data RingBuffer v a
     = RingBuffer { ringBuffer :: (VG.Mutable v) (PrimState IO) a
                  , ringState  :: MVar RingState
