@@ -1,4 +1,4 @@
-module Util.RingBuffer ( RingBuffer
+module Data.RingBuffer ( RingBuffer
                        , new
                        , clear
                        , append
