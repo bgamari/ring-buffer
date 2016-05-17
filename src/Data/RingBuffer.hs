@@ -9,6 +9,7 @@ module Data.RingBuffer ( RingBuffer
                        , capacity
                        , length
                        , latest
+                       , toList
                        , withItems
                        ) where
 
@@ -111,15 +112,26 @@ length rb = withRing rb length'
 -- | Retrieve the $n$th most-recently added item of the ring
 latest :: (VG.Vector v a) => RingBuffer v a -> Int -> IO (Maybe a)
 latest rb n = withRing rb $ do
-    s <- get
     len <- length'
-    cap <- capacity'
     if n >= len
       then return Nothing
-      else do
-          let idx = (cap + len - n - 1) `mod` cap
-          v <- liftIO $ VGM.unsafeRead (ringBuffer rb) idx
-          return $ Just v
+      else Just <$> latest' n
+
+latest' :: (VGM.MVector v a, MonadIO m) => Int -> RingM m v a a
+latest' n = do
+    len <- length'
+    cap <- capacity'
+    when (n >= len) $ error "Data.RingBuffer.latest': invalid index"
+    let idx = (cap + len - n - 1) `mod` cap
+    buf <- ask
+    liftIO $ VGM.unsafeRead buf idx
+
+-- | Get the entire contents of the ring, with the most recently added element
+-- at the head. Note that this is rather inefficient.
+toList :: (VG.Vector v a) => RingBuffer v a -> IO [a]
+toList rb = withRing rb $ do
+    len <- length'
+    mapM latest' [0..len-1]
 
 -- | Execute the given action with the items of the ring.
 -- Note that no references to the vector may leak out of the action as
