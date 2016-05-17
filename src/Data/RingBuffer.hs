@@ -8,6 +8,7 @@ module Data.RingBuffer ( RingBuffer
                        , concat
                        , capacity
                        , length
+                       , latest
                        , withItems
                        ) where
 
@@ -106,6 +107,19 @@ length' = do
 -- | The current filled length of the ring
 length :: (VG.Vector v a) => RingBuffer v a -> IO Int
 length rb = withRing rb length'
+
+-- | Retrieve the $n$th most-recently added item of the ring
+latest :: (VG.Vector v a) => RingBuffer v a -> Int -> IO (Maybe a)
+latest rb n = withRing rb $ do
+    s <- get
+    len <- length'
+    cap <- capacity'
+    if n >= len
+      then return Nothing
+      else do
+          let idx = (cap + len - n - 1) `mod` cap
+          v <- liftIO $ VGM.unsafeRead (ringBuffer rb) idx
+          return $ Just v
 
 -- | Execute the given action with the items of the ring.
 -- Note that no references to the vector may leak out of the action as
