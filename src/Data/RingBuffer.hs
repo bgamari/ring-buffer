@@ -51,9 +51,11 @@ advance n = do
     put $ RingState (full || a > 0) pos'
 
 -- | Create a new ring of a given length
+--
+-- /Note:/ size must be non-zero
 new :: (VG.Vector v a) => Int -> IO (RingBuffer v a)
 new n = do
-    when (n == 0) $ fail "Data.RingBuffer.new: zero sized ring"
+    when (n < 1) $ fail "Data.RingBuffer.new: invalid ring size"
     buffer <- VGM.new n
     state <- newMVar $ RingState False 0
     return $ RingBuffer { ringBuffer=buffer, ringState=state }
