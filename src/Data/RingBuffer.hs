@@ -13,13 +13,14 @@ module Data.RingBuffer ( RingBuffer
                        , withItems
                        ) where
 
-import Prelude hiding (length, concat)
 import qualified Data.Vector.Generic as VG
 import qualified Data.Vector.Generic.Mutable as VGM
+import Control.Applicative
 import Control.Concurrent
 import Control.Monad.State
 import Control.Monad.Reader
 import Control.Monad.Primitive
+import Prelude hiding (length, concat)
 
 -- | A concurrent ring buffer.
 data RingBuffer v a
