@@ -17,6 +17,7 @@ import qualified Data.Vector.Generic as VG
 import qualified Data.Vector.Generic.Mutable as VGM
 import Control.Applicative
 import Control.Concurrent
+import Control.Monad.Catch
 import Control.Monad.State
 import Control.Monad.Reader
 import Control.Monad.Primitive
@@ -34,11 +35,11 @@ data RingState = RingState { ringFull :: !Bool, ringHead :: !Int }
 type RingM m vm a = StateT RingState (ReaderT (vm (PrimState IO) a) m)
 
 -- | Atomically perform an action with the ring
-withRing :: (VG.Vector v a, MonadIO m)
+withRing :: (VG.Vector v a, MonadIO m, MonadMask m)
          => RingBuffer v a
          -> RingM m (VG.Mutable v) a r
          -> m r
-withRing rb action = do
+withRing rb action = mask_ $ do
     s <- liftIO $ takeMVar (ringState rb)
     (r, s') <- runReaderT (runStateT action s) (ringBuffer rb)
     liftIO $ putMVar (ringState rb) s'
@@ -141,7 +142,8 @@ toList rb = withRing rb $ do
 -- Note that no references to the vector may leak out of the action as
 -- it will later be mutated. Moreover, the items in the vector are in
 -- no particular order.
-withItems :: (MonadIO m, VG.Vector v a) => RingBuffer v a -> (v a -> m b) -> m b
+withItems :: (MonadIO m, MonadMask m, VG.Vector v a)
+          => RingBuffer v a -> (v a -> m b) -> m b
 withItems rb action = withRing rb $ do
     frozen <- liftIO $ VG.unsafeFreeze (ringBuffer rb)
     n <- length'
