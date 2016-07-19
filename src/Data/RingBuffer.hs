@@ -114,7 +114,7 @@ length' = do
 length :: (VG.Vector v a) => RingBuffer v a -> IO Int
 length rb = withRing rb length'
 
--- | Retrieve the $n$th most-recently added item of the ring
+-- | Retrieve the \(n\)th most-recently added item of the ring
 latest :: (VG.Vector v a) => RingBuffer v a -> Int -> IO (Maybe a)
 latest rb n = withRing rb $ do
     len <- length'
