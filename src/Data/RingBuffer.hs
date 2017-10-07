@@ -29,7 +29,9 @@ data RingBuffer v a
                  , ringState  :: MVar RingState
                  }
 
-data RingState = RingState { ringFull :: !Bool, ringHead :: !Int }
+data RingState = RingState { ringFull :: !Bool -- ^ is the ring full?
+                           , ringHead :: !Int -- ^ index of next entry to be written
+                           }
 
 -- | We use the @Mutable@ vector type to ensure injectiveness
 type RingM m vm a = StateT RingState (ReaderT (vm (PrimState IO) a) m)
@@ -59,8 +61,8 @@ new :: (VG.Vector v a) => Int -> IO (RingBuffer v a)
 new n = do
     when (n < 1) $ fail "Data.RingBuffer.new: invalid ring size"
     buffer <- VGM.new n
-    state <- newMVar $ RingState False 0
-    return $ RingBuffer { ringBuffer=buffer, ringState=state }
+    state0 <- newMVar $ RingState False 0
+    return $ RingBuffer { ringBuffer=buffer, ringState=state0 }
 
 -- | Reset the ringbuffer to its empty state
 clear :: VG.Vector v a => RingBuffer v a -> IO ()
