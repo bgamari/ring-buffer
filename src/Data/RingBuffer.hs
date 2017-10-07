@@ -129,7 +129,8 @@ latest' n = do
     len <- length'
     cap <- capacity'
     when (n >= len) $ error "Data.RingBuffer.latest': invalid index"
-    let idx = (cap + len - n - 1) `mod` cap
+    RingState _ hd <- get
+    let idx = (hd - n - 1) `mod` cap
     buf <- ask
     liftIO $ VGM.unsafeRead buf idx
 
