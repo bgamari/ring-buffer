@@ -1,8 +1,7 @@
 name:                ring-buffer
-version:             0.3
-x-revision:          1
+version:             0.4
 synopsis:            A concurrent, mutable ring-buffer
-description:         A concurrent, mutable ring-buffer
+description:         A mutable ring-buffer implementation suitable for concurrent access.
 homepage:            http://github.com/bgamari/ring-buffer
 license:             BSD3
 license-file:        LICENSE
