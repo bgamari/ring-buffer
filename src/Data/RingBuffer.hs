@@ -17,6 +17,7 @@ import qualified Data.Vector.Generic as VG
 import qualified Data.Vector.Generic.Mutable as VGM
 import Control.Applicative
 import Control.Concurrent
+import Control.Monad (when)
 import Control.Monad.Catch
 import Control.Monad.State
 import Control.Monad.Reader
