@@ -26,8 +26,8 @@ import Prelude hiding (length, concat)
 
 -- | A concurrent ring buffer.
 data RingBuffer v a
-    = RingBuffer { ringBuffer :: (VG.Mutable v) (PrimState IO) a
-                 , ringState  :: MVar RingState
+    = RingBuffer { ringBuffer :: !(VG.Mutable v (PrimState IO) a)
+                 , ringState  :: !(MVar RingState)
                  }
 
 data RingState = RingState { ringFull :: !Bool -- ^ is the ring full?
