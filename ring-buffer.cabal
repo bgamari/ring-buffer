@@ -1,5 +1,5 @@
 name:                ring-buffer
-version:             0.4
+version:             0.4.1
 synopsis:            A concurrent, mutable ring-buffer
 description:         A mutable ring-buffer implementation suitable for concurrent access.
 homepage:            http://github.com/bgamari/ring-buffer
