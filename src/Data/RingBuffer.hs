@@ -54,6 +54,7 @@ advance n = do
     cap <- capacity'
     let (a, pos') = (pos + n) `divMod` cap
     put $ RingState (full || a > 0) pos'
+{-# INLINEABLE advance #-}
 
 -- | Create a new ring of a given length
 --
@@ -75,6 +76,7 @@ append x rb = withRing rb $ do
     s <- get
     liftIO $ VGM.unsafeWrite (ringBuffer rb) (ringHead s) x
     advance 1
+{-# INLINABLE append #-}
 
 -- | Add multiple items to the end of the ring
 -- This ignores any items above the length of the ring
@@ -96,6 +98,7 @@ concat xs rb = withRing rb $ do
             dest' = VGM.take (takeN - untilWrap) $ ringBuffer rb
         liftIO $ VGM.copy dest' src'
     advance takeN
+{-# INLINABLE concat #-}
 
 -- | The maximum number of items the ring can contain
 capacity :: (VG.Vector v a) => RingBuffer v a -> Int
@@ -134,6 +137,7 @@ latest' n = do
     let idx = (hd - n - 1) `mod` cap
     buf <- ask
     liftIO $ VGM.unsafeRead buf idx
+{-# INLINABLE latest' #-}
 
 -- | Get the entire contents of the ring, with the most recently added element
 -- at the head. Note that this is rather inefficient.
@@ -141,6 +145,7 @@ toList :: (VG.Vector v a) => RingBuffer v a -> IO [a]
 toList rb = withRing rb $ do
     len <- length'
     mapM latest' [0..len-1]
+{-# INLINABLE toList #-}
 
 -- | Execute the given action with the items of the ring.
 -- Note that no references to the vector may leak out of the action as
